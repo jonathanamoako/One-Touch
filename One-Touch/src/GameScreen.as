@@ -2,53 +2,59 @@
 	import flash.display.MovieClip;
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
-	import flash.events.Event; //used for ENTER_FRAME event
+	import flash.events.Event; 
+	import flash.media.Sound;
 	
-	public class Main extends MovieClip{
+	public class GameScreen extends MovieClip{
 		
-		//constants
-		const gravity:Number = 1.5;            //gravity of the game
-		const dist_btw_obstacles:Number = 300; //distance between two obstacles
-		const ob_speed:Number = 8;			   //speed of the obstacle
-		const jump_force:Number = 15;          //force with which it jumps
 		
-		//variables
+		const gravity:Number = 1.5;            
+		const dist_btw_obstacles:Number = 300; 
+		const ob_speed:Number = 8;			   
+		const jump_force:Number = 15;          
+		
+		
 		var player:Player = new Player();	   
-		var lastob:Obstacle = new Obstacle();  //varible to store the last obstacle in the obstacle array
-		var obstacles:Array = new Array();     //an array to store all the obstacles
-		var yspeed:Number = 0;				   //A variable representing the vertical speed of the bird
-		var score:Number = 0;				   //A variable representing the score
+		var lastob:Obstacle = new Obstacle();  
+		var obstacles:Array = new Array();     
+		var yspeed:Number = 0;				   
+		var score:Number = 0;
+		var soundTrigger:Sound = new Sound();
 		
-		public function Main(){
-			init();
+		public function GameScreen(){
+			addEventListener(Event.ADDED_TO_STAGE, onAdded);
 		}
 		
+		function onAdded(a:Event){
+			init();
+			}
+		
 		function init():void {
-			//initialize all the variables
+			
 			player = new Player();
 			lastob = new Obstacle();
 			obstacles = new Array();
 			yspeed = 0;
 			score = 0;
 			
-			//add player to center of the stage the stage
-			player.x = stage.stageWidth/2;
-			player.y = stage.stageHeight/2;
+			
+			player.x = 300;
+			player.y = 300;
 			addChild(player);
 			
-			//create 3 obstacles ()
+			
 			createObstacle();
 			createObstacle();
 			createObstacle();
 			
-			//Add EnterFrame EventListeners (which is called every frame) and KeyBoard EventListeners
+			
 			addEventListener(Event.ENTER_FRAME,onEnterFrameHandler);
             stage.addEventListener(KeyboardEvent.KEY_UP, key_up);
 		}
 		
 		private function key_up(event:KeyboardEvent){
 			if(event.keyCode == Keyboard.SPACE){
-				//If space is pressed then make the bird
+				
 				yspeed = -jump_force;
 			}
 		}
@@ -66,30 +72,30 @@
 		}
 		
 		function onEnterFrameHandler(event:Event){
-			//update player
+			
 			yspeed += gravity;
 			player.y += yspeed;
 			
-			//restart if the player touches the ground
+			
 			if(player.y + player.height/2 > stage.stageHeight){
 				restart();
 			}
 			
-			//Don't allow the bird to go above the screen
+			
 			if(player.y - player.height/2 < 0){
 				player.y = player.height/2;
 			}
 			
-			//update obstacles
+			
 			for(var i:int = 0;i<obstacles.length;++i){
 				updateObstacle(i);
 			}
 	        
-			//display the score
+			
 			scoretxt.text = String(score);
 		}
 		
-		//This functions update the obstacle
+		
 		function updateObstacle(i:int){
 			var ob:Obstacle = obstacles[i];
 			
@@ -98,11 +104,11 @@
 			ob.x -= ob_speed;
 			
 			if(ob.x < -ob.width){
-				//if an obstacle reaches left of the stage then change its position to the back of the last obstacle
+				
 				changeObstacle(ob);
 			}
 			
-			//If the bird hits an obstacle then restart the game
+			
 			if(ob.hitTestPoint(player.x + player.width/2,player.y + player.height/2,true)
 			   || ob.hitTestPoint(player.x + player.width/2,player.y - player.height/2,true)
 			   || ob.hitTestPoint(player.x - player.width/2,player.y + player.height/2,true)
@@ -110,14 +116,15 @@
 				restart();
 			}
 			
-			//If the bird got through the obstacle without hitting it then increase the score
+			
 			if((player.x - player.width/2 > ob.x + ob.width/2) && !ob.covered){
 				++score;
 				ob.covered = true;
+				soundTrigger.play();
 			}
 		}
 		
-		//This function changes the position of the obstacle such that it will be the last obstacle and it also randomizes its y position
+		
 		function changeObstacle(ob:Obstacle){
 			ob.x = lastob.x + dist_btw_obstacles;
 			ob.y = 100+Math.random()*(stage.stageHeight-200);
@@ -125,7 +132,7 @@
 			ob.covered = false;
 		}
 		
-		//this function creates an obstacle
+		
 		function createObstacle(){
 			var ob:Obstacle = new Obstacle();
 			if(lastob.x == 0)
